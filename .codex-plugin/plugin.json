@@ -1,0 +1,25 @@
+{
+  "name": "affinity",
+  "version": "0.1.0",
+  "description": "Create, inspect, edit, and preview Affinity documents through its native local MCP server and JavaScript SDK.",
+  "skills": "./skills/",
+  "mcpServers": "./.mcp.json",
+  "interface": {
+    "displayName": "Affinity",
+    "shortDescription": "Design and editing through Affinity's local MCP",
+    "longDescription": "A personal Codex plugin for Affinity's native MCP server. Includes SDK documentation, document scripting, selection and spread previews, and reusable script tools. Keep Affinity open with its MCP server enabled.",
+    "category": "Creativity",
+    "capabilities": [
+      "Interactive",
+      "Write"
+    ],
+    "defaultPrompt": [
+      "Inspect my open Affinity document.",
+      "Create an editable design in Affinity."
+    ],
+    "composerIcon": "./assets/icon.png",
+    "logo": "./assets/icon.png"
+  },
+  "repository": "https://github.com/ebuberpg-prog/affinity-codex-plugin",
+  "homepage": "https://github.com/ebuberpg-prog/affinity-codex-plugin#readme"
+}

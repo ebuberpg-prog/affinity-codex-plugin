@@ -1,0 +1,20 @@
+{
+  "mcpServers": {
+    "affinity": {
+      "command": "node",
+      "args": [
+        "./scripts/bridge.mjs"
+      ],
+      "cwd": ".",
+      "env": {
+        "CREATIVE_MCP_APP": "Affinity",
+        "CREATIVE_MCP_PORT": "6767"
+      },
+      "env_vars": [
+        "AFFINITY_MCP_PORT"
+      ],
+      "startup_timeout_sec": 60,
+      "tool_timeout_sec": 180
+    }
+  }
+}
