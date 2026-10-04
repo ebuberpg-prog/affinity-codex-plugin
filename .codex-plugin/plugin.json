@@ -1,13 +1,13 @@
 {
   "name": "affinity",
-  "version": "0.1.0",
-  "description": "Create, inspect, edit, and preview Affinity documents through its native local MCP server and JavaScript SDK.",
+  "version": "0.3.0",
+  "description": "Create, inspect, edit, and preview Affinity documents through its native local MCP server, with guided Cavalry handoff, refresh, and visual comparison.",
   "skills": "./skills/",
   "mcpServers": "./.mcp.json",
   "interface": {
     "displayName": "Affinity",
     "shortDescription": "Design and editing through Affinity's local MCP",
-    "longDescription": "A personal Codex plugin for Affinity's native MCP server. Includes SDK documentation, document scripting, selection and spread previews, and reusable script tools. Keep Affinity open with its MCP server enabled.",
+    "longDescription": "A personal Codex plugin for Affinity's native MCP server. Includes SDK documentation, document scripting, previews, reusable scripts, and a planned handoff and refresh workflow for Cavalry. Keep Affinity open with its MCP server enabled.",
     "category": "Creativity",
     "capabilities": [
       "Interactive",
@@ -15,7 +15,9 @@
     ],
     "defaultPrompt": [
       "Inspect my open Affinity document.",
-      "Create an editable design in Affinity."
+      "Create an editable design in Affinity.",
+      "Plan an Affinity to Cavalry handoff for my open document.",
+      "Refresh my linked Affinity artwork in Cavalry and compare the previews."
     ],
     "composerIcon": "./assets/icon.png",
     "logo": "./assets/icon.png"

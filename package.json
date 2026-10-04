@@ -1,6 +1,6 @@
 {
   "name": "codex-affinity-plugin",
-  "version": "0.1.0",
+  "version": "0.3.0",
   "private": true,
   "type": "module",
   "description": "Local Codex transport adapter for Affinity's native MCP server",
@@ -11,8 +11,9 @@
     "@modelcontextprotocol/sdk": "1.31.0"
   },
   "scripts": {
-    "check": "node --check scripts/bridge.mjs && node --check scripts/verify.mjs",
-    "verify": "node scripts/verify.mjs"
+    "check": "node --check scripts/bridge.mjs && node --check scripts/handoff-tools.mjs && node --check scripts/verify.mjs",
+    "verify": "node scripts/verify.mjs",
+    "test": "node --test scripts/handoff-tools.test.mjs"
   },
   "license": "MIT",
   "repository": {

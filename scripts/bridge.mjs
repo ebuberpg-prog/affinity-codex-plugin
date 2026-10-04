@@ -2,6 +2,8 @@
 // Pass through the app's own tools, resources, prompts, and protocol messages.
 import { SSEClientTransport } from '@modelcontextprotocol/sdk/client/sse.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
+import { randomUUID } from 'node:crypto';
+import { createHandoffHandler, handoffToolDefinitions } from './handoff-tools.mjs';
 
 const app = process.env.CREATIVE_MCP_APP || 'Cavalry';
 const override = process.env[`${app.toUpperCase()}_MCP_PORT`];
@@ -27,10 +29,36 @@ const remote = new SSEClientTransport(endpoint, {
 });
 const local = new StdioServerTransport();
 let closing = false;
+const pendingNative = new Map();
+const pendingToolLists = new Set();
+const internalPrefix = `codex-affinity-${randomUUID()}-`;
+let internalSequence = 0;
+
+const callNative = (name, args) => new Promise((resolve, reject) => {
+  const id = `${internalPrefix}${++internalSequence}`;
+  const timer = setTimeout(() => {
+    pendingNative.delete(id);
+    reject(new Error(`${name} timed out. The result may be unknown.`));
+  }, 175000);
+  pendingNative.set(id, { resolve, reject, timer });
+  remote.send({ jsonrpc: '2.0', id, method: 'tools/call', params: { name, arguments: args } })
+    .catch(error => {
+      clearTimeout(timer);
+      pendingNative.delete(id);
+      reject(error);
+    });
+});
+const handleHandoff = createHandoffHandler(callNative);
+
 const shutdown = async (code = 0) => {
   if (closing) return;
   closing = true;
   clearTimeout(startupTimer);
+  for (const pending of pendingNative.values()) {
+    clearTimeout(pending.timer);
+    pending.reject(new Error('Affinity connection closed.'));
+  }
+  pendingNative.clear();
   await Promise.allSettled([remote.close(), local.close()]);
   process.exit(code);
 };
@@ -39,8 +67,37 @@ const failure = (error) => {
   console.error(`[${app}] MCP connection failed. Keep ${app} open, enable its MCP server, and check port ${port}. ${error.message}`);
   void shutdown(1);
 };
-remote.onmessage = (message) => { void local.send(message).catch(failure); };
-local.onmessage = (message) => { void remote.send(message).catch(failure); };
+remote.onmessage = (message) => {
+  if ('id' in message && pendingNative.has(message.id)) {
+    const pending = pendingNative.get(message.id);
+    pendingNative.delete(message.id);
+    clearTimeout(pending.timer);
+    if ('error' in message) pending.reject(new Error(message.error.message));
+    else pending.resolve(message.result);
+    return;
+  }
+  if ('id' in message && typeof message.id === 'string' && message.id.startsWith(internalPrefix)) return;
+  if ('id' in message && pendingToolLists.has(message.id)) {
+    pendingToolLists.delete(message.id);
+    if ('result' in message && Array.isArray(message.result?.tools)) {
+      message = { ...message, result: { ...message.result,
+        tools: [...message.result.tools, ...handoffToolDefinitions] } };
+    }
+  }
+  void local.send(message).catch(failure);
+};
+local.onmessage = (message) => {
+  if (message.method === 'tools/list' && message.id !== undefined && !message.params?.cursor) {
+    pendingToolLists.add(message.id);
+  }
+  if (message.method === 'tools/call' &&
+      handoffToolDefinitions.some(tool => tool.name === message.params?.name)) {
+    void handleHandoff(message.params.name, message.params.arguments).then(result =>
+      local.send({ jsonrpc: '2.0', id: message.id, result })).catch(failure);
+    return;
+  }
+  void remote.send(message).catch(failure);
+};
 remote.onerror = failure;
 local.onerror = failure;
 remote.onclose = () => { void shutdown(); };
